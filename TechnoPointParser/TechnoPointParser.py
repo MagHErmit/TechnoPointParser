@@ -31,12 +31,12 @@ data['data'] = data['data'][:-1]
 data['data'] += "]}"
     
 
-results = {
-           'names' : names,
-           'numbers' : numbers,
-           'links' : links,
-           'price' : price
-          }
+results = [
+           names,
+           numbers,
+           price,
+           links
+          ]
 
 
 
@@ -56,5 +56,43 @@ s.headers.update({
 ans = json.loads(s.post('https://technopoint.ru/ajax-state/price/', data = data).text)
 
 for price in ans['data']['states']:
-    results['price'].append(price['data']['current'])
+    results[2].append(price['data']['current'])
 
+
+##################-----------------------WRITE TO EXCEL TABLE-----------------------##################
+
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font, Side
+
+fill = PatternFill(fill_type='solid',start_color='FFD700')
+font = Font(name='Calibri',
+                    bold=True,
+                    )
+
+
+wb = Workbook()
+ws = wb.active
+ws.title = 'Смартфоны 2020'
+topic = ['Наименование', 'Код товара', 'Цена', 'Ссылка на изображение']
+#for row in topic:
+ws.append(topic)
+
+for cellObj in ws['A1:D1']:
+    for cell in cellObj:
+        cell.fill = fill
+        cell.font = font
+for i in range(0,10):
+    row = []
+    for j in range(0,4):
+        row.append(results[j][i])
+    ws.append(row)
+
+dims = {}
+for row in ws.rows:
+    for cell in row:
+        if cell.value:
+            dims[cell.column_letter] = max((dims.get(cell.column, 0), len(cell.value)))
+for col, value in dims.items():
+    ws.column_dimensions[col].width = value + 1
+ 
+wb.save('Смартфоны.xlsx')
